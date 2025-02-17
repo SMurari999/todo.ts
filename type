@@ -1,0 +1,110 @@
+import React, { useState, useEffect, useRef } from "react";
+import { Typography, Box, TextField, Button, List, ListItem } from "@mui/material";
+
+interface Task {
+  text: string;
+  completed: boolean;
+}
+
+const App: React.FC = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTask, setNewTask] = useState<string>("");
+  const [number, setNumber] = useState<number>(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setNumber(tasks.length);
+  }, [tasks]);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const addTask = (): void => {
+    if (newTask.trim() !== "") {
+      setTasks([...tasks, { text: newTask, completed: false }]);
+      setNewTask("");
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }
+  };
+
+  const toggleTaskCompletion = (index: number): void => {
+    const updatedTasks = [...tasks];
+    updatedTasks[index].completed = !updatedTasks[index].completed;
+    setTasks(updatedTasks);
+  };
+
+  const deleteTask = (index: number): void => {
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
+  };
+
+  return (
+    <Box
+      sx={{
+        maxWidth: 400,
+        margin: "50px auto",
+        textAlign: "center",
+        fontFamily: "Arial, sans-serif",
+        backgroundColor: "#f8f9fa",
+        padding: 3,
+        borderRadius: 2,
+      }}
+    >
+      <Typography variant="h4" gutterBottom>To-Do List</Typography>
+      <Box sx={{ display: "flex", gap: 1, justifyContent: "center", marginBottom: 2 }}>
+        <TextField
+          inputRef={inputRef}
+          placeholder="Add a new task..."
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          size="small"
+          sx={{ width: "60%" }}
+        />
+        <Button variant="contained" color="success" onClick={addTask}>Add</Button>
+      </Box>
+      <List>
+        {tasks.map((task, index) => (
+          <ListItem
+            key={index}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              backgroundColor: "white",
+              margin: "5px 0",
+              padding: 1,
+              borderRadius: 1,
+              textDecoration: task.completed ? "line-through" : "none",
+              color: task.completed ? "gray" : "black",
+            }}
+          >
+            <Typography
+              variant="body1"
+              component="span"
+              onClick={() => toggleTaskCompletion(index)}
+              sx={{ cursor: "pointer" }}
+            >
+              {task.text}
+            </Typography>
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={() => deleteTask(index)}
+            >
+              ❌
+            </Button>
+          </ListItem>
+        ))}
+      </List>
+      <Typography variant="h6" mt={2}>Number of tasks: {number}</Typography>
+    </Box>
+  );
+};
+
+export default App;
