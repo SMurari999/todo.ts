@@ -1,110 +1,94 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Typography, Box, TextField, Button, List, ListItem } from "@mui/material";
+import React, { useState } from "react";
+import "./todo.css";
 
-interface Task {
+interface Todo {
+  id: number;
   text: string;
   completed: boolean;
+  dueDate: string;
 }
 
-const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState<string>("");
-  const [number, setNumber] = useState<number>(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+const TodoList: React.FC = () => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [input, setInput] = useState<string>("");
+  const [dueDate, setDueDate] = useState<string>("");
+  const [editingId, setEditingId] = useState<number | null>(null);
 
-  useEffect(() => {
-    setNumber(tasks.length);
-  }, [tasks]);
+  const addOrUpdateTodo = () => {
+    if (input.trim() === "") return;
 
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
+    if (editingId !== null) {
+      setTodos(
+        todos.map((todo) =>
+          todo.id === editingId ? { ...todo, text: input, dueDate } : todo
+        )
+      );
+      setEditingId(null);
+    } else {
+      const newTodo: Todo = {
+        id: Date.now(),
+        text: input,
+        completed: false,
+        dueDate,
+      };
+      setTodos([...todos, newTodo]);
     }
-  }, []);
-
-  const addTask = (): void => {
-    if (newTask.trim() !== "") {
-      setTasks([...tasks, { text: newTask, completed: false }]);
-      setNewTask("");
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }
+    setInput("");
+    setDueDate("");
   };
 
-  const toggleTaskCompletion = (index: number): void => {
-    const updatedTasks = [...tasks];
-    updatedTasks[index].completed = !updatedTasks[index].completed;
-    setTasks(updatedTasks);
+  const toggleComplete = (id: number) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
   };
 
-  const deleteTask = (index: number): void => {
-    const updatedTasks = tasks.filter((_, i) => i !== index);
-    setTasks(updatedTasks);
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+  };
+
+  const startEditing = (id: number, text: string, dueDate: string) => {
+    setEditingId(id);
+    setInput(text);
+    setDueDate(dueDate);
   };
 
   return (
-    <Box
-      sx={{
-        maxWidth: 400,
-        margin: "50px auto",
-        textAlign: "center",
-        fontFamily: "Arial, sans-serif",
-        backgroundColor: "#f8f9fa",
-        padding: 3,
-        borderRadius: 2,
-      }}
-    >
-      <Typography variant="h4" gutterBottom>To-Do List</Typography>
-      <Box sx={{ display: "flex", gap: 1, justifyContent: "center", marginBottom: 2 }}>
-        <TextField
-          inputRef={inputRef}
-          placeholder="Add a new task..."
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          size="small"
-          sx={{ width: "60%" }}
+    <div className="todo-container">
+      <h2>Todo List</h2>
+      <div className="todo-input">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Enter a task..."
         />
-        <Button variant="contained" color="success" onClick={addTask}>Add</Button>
-      </Box>
-      <List>
-        {tasks.map((task, index) => (
-          <ListItem
-            key={index}
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              backgroundColor: "white",
-              margin: "5px 0",
-              padding: 1,
-              borderRadius: 1,
-              textDecoration: task.completed ? "line-through" : "none",
-              color: task.completed ? "gray" : "black",
-            }}
-          >
-            <Typography
-              variant="body1"
-              component="span"
-              onClick={() => toggleTaskCompletion(index)}
-              sx={{ cursor: "pointer" }}
-            >
-              {task.text}
-            </Typography>
-            <Button
-              variant="contained"
-              color="error"
-              size="small"
-              onClick={() => deleteTask(index)}
-            >
-              ❌
-            </Button>
-          </ListItem>
+        <input
+          type="datetime-local"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+        />
+        <button onClick={addOrUpdateTodo}>{editingId ? "Update" : "Add"}</button>
+      </div>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id} className={todo.completed ? "completed" : ""}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggleComplete(todo.id)}
+            />
+            <span>{todo.text}</span>
+            <span className="due-date">(Due: {todo.dueDate || "No date"})</span>
+            <button onClick={() => startEditing(todo.id, todo.text, todo.dueDate)}>✏️</button>
+            <button onClick={() => deleteTodo(todo.id)}>❌</button>
+          </li>
         ))}
-      </List>
-      <Typography variant="h6" mt={2}>Number of tasks: {number}</Typography>
-    </Box>
+      </ul>
+    </div>
   );
 };
 
-export default App;
+export default TodoList;
